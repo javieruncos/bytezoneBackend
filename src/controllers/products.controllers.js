@@ -50,12 +50,15 @@ export const getProductsById =async (req,res)=>{
 
 export const updatePriducts = async (req,res)=>{
     try {
+        //buscamos el producto por id para actualizar
         const updatedProduct  = await Product.findByIdAndUpdate(req.params.id,req.body,{new:true});
+        //si no se encuentra el producto retornamos un error
         if(!updatedProduct){
             return res.status(404).json({
                 message:'Producto no encontrado'
             })  
         }
+        //enviamos la respuesta
         res.json(updatedProduct);
     } catch (error) {
         res.status(500).json({
@@ -68,13 +71,18 @@ export const updatePriducts = async (req,res)=>{
 
 export const deleteProduct = async (req,res)=>{
     try {
+        //buscamos el producto por id para eliminar
         const deletedProduct  = await Product.findByIdAndDelete(req.params.id);
+        //si no se encuentra el producto retornamos un error
         if(!deletedProduct){
             return res.status(404).json({
                 message:'Producto no encontrado'
             })  
         }
-        res.json(deletedProduct);
+        res.json({
+            message:"Producto eliminado",
+            deletedProduct
+        });
     } catch (error) {
         res.status(500).json({
             message:"Error al obtener el producto",

@@ -16,8 +16,13 @@ export const getProducts =async (req,res)=>{
 
 export const createProduct = async (req,res)=>{
    try {
+     //obtenemos la url de la imagen y la guardamos
+    const imageUrl = req.file? `/uploads/${req.file.filename}`: null;
     //creamos el producto con los datos del body
-    const newProduct = new Product(req.body);
+    const newProduct = new Product({
+        ...req.body,
+        images:imageUrl //agregamos la url de la imagen
+    });
     //guardamos el producto en la base de datos
     const saveProduct = await newProduct.save();
     //enviamos la respuesta

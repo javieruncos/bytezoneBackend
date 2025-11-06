@@ -15,5 +15,7 @@ app.use(morgan('dev'));
 //express.json para recibir json
 app.use(express.json());
 
+app.use('/uploads', express.static('uploads'));
+
 //configuramos las rutas
 app.use("/api/products", productRouter);

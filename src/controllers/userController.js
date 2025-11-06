@@ -4,20 +4,24 @@ import bcrypt from "bcrypt"
 export const register = async (req, res) => {
     console.log(req.body)
     try {
-        const {username, email, password} = req.body;
-        const userFound = await User.findOne({email});
+        const {username, email, password,confirmPassword} = req.body;
 
+        if(password !== confirmPassword){
+            return res.status(400).json({message:"Las contraseñas no coinciden"})
+        }
+
+
+        const userFound = await User.findOne({email});
         //verificamos si el usuario ya esta registrado
         if(userFound){
             return res.status(400).json({message:"El usuario ya esta registrado"})
         }
-        //encriptamos la contraseña
-        const passwordHash = await bcrypt.hash(password,10)
+        
         //creamos el usuario
         const newUser = new User({
             username,
             email,
-            password: passwordHash
+            password
         })
 
         await newUser.save();

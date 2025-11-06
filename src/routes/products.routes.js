@@ -12,7 +12,7 @@ router.post("/",upload.single("image"), createProductValidation,handleValidatorE
 
 router.get("/:id", getProductsById);
 
-router.put("/:id", createProductValidation, handleValidatorErrors, updatePriducts);
+router.put("/:id",upload.array("images"), createProductValidation, handleValidatorErrors, updatePriducts);
 
 router.delete("/:id", deleteProduct);
 

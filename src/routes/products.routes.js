@@ -1,5 +1,5 @@
 import express from 'express';
-import { createProduct, deleteProduct, getProducts, getProductsById, updatePriducts } from '../controllers/products.controllers.js';
+import { createProduct, deleteProduct, getProducts, getProductsById, updateProducts } from '../controllers/products.controllers.js';
 import { createProductValidation } from '../validations/products.validation.js';
 import { handleValidatorErrors } from '../middlewares/validationResult.js';
 import  {upload}  from '../config/multer.js';
@@ -12,7 +12,7 @@ router.post("/",upload.single("image"), createProductValidation,handleValidatorE
 
 router.get("/:id", getProductsById);
 
-router.put("/:id",upload.array("images"), createProductValidation, handleValidatorErrors, updatePriducts);
+router.put("/:id",upload.array("images"), createProductValidation, handleValidatorErrors, updateProducts);
 
 router.delete("/:id", deleteProduct);
 

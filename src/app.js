@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import productRouter from './routes/products.routes.js';
+import userRouter from './routes/userRoutes.js';
 
 
 //creamos una instancia de express
@@ -19,3 +20,4 @@ app.use('/uploads', express.static('uploads'));
 
 //configuramos las rutas
 app.use("/api/products", productRouter);
+app.use("/api/users", userRouter);

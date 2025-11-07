@@ -3,17 +3,18 @@ import { createProduct, deleteProduct, getProducts, getProductsById, updateProdu
 import { createProductValidation } from '../validations/products.validation.js';
 import { handleValidatorErrors } from '../middlewares/validationResult.js';
 import  {upload}  from '../config/multer.js';
+import { verifyAdmin } from '../middlewares/auth.middleware.js';
 //creamos una instancia de express
 const router = express.Router();
 //configuramos las rutas
 router.get('/', getProducts);
 
-router.post("/",upload.single("image"), createProductValidation,handleValidatorErrors,createProduct);
+router.post("/",verifyAdmin,upload.single("image"), createProductValidation,handleValidatorErrors,createProduct);
 
 router.get("/:id", getProductsById);
 
-router.put("/:id",upload.array("images"), createProductValidation, handleValidatorErrors, updateProducts);
+router.put("/:id",verifyAdmin,upload.array("images"), createProductValidation, handleValidatorErrors, updateProducts);
 
-router.delete("/:id", deleteProduct);
+router.delete("/:id",verifyAdmin, deleteProduct);
 
 export default router;

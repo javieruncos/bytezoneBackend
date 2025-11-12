@@ -59,6 +59,10 @@ const productSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    description:{
+      type: String,
+      trim: true,
+    } , 
     images: {
       type: [String], // array de URLs
       default: [],

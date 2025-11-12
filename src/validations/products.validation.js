@@ -3,37 +3,52 @@ import { body } from "express-validator";
 
 export const createProductValidation = [
     body("name")
-    .notEmpty().withMessage("El nombre es requerido") //valida que el nombre no este vacio
-    .isString().withMessage("El nombre debe ser una cadena de texto"),
+        .notEmpty().withMessage("El nombre es requerido")
+        .isString().withMessage("El nombre debe ser una cadena de texto"),
 
     body("price")
-    .notEmpty().withMessage("El precio es requerido") //valida que el precio no este vacio
-    .isNumeric().withMessage("El precio debe ser un número"), //valida que el precio sea un número
-    
-    body("type").notEmpty().withMessage("El tipo es requerido"), //valida que el tipo no este vacio
+        .notEmpty().withMessage("El precio es requerido")
+        // Primero validamos que sea un string (así llega) y luego que contenga un número.
+        .isString().withMessage("El precio debe ser un string")
+        .isNumeric().withMessage("El precio debe ser un valor numérico"),
 
-    //valida que el tipo no este vacio,es opcional y debe ser numerico
-    body("discount").optional().isNumeric().withMessage("El descuento debe ser un número"),
-    //rating es opcional y debe ser numerico
-    body("rating").optional().isNumeric().withMessage("El rating debe ser un número"),
+    body("type")
+        .notEmpty().withMessage("El tipo es requerido")
+        .isString().withMessage("El tipo debe ser una cadena de texto"),
 
-    body("color").optional().isString().withMessage("El color debe ser una cadena de texto"),
+    body("discount")
+        .optional()
+        .isString().withMessage("El descuento debe ser un string")
+        .isNumeric().withMessage("El descuento debe ser un valor numérico"),
 
-    body("description").optional().isString().withMessage("La descripción debe ser una cadena de texto"),
+    body("rating")
+        .optional()
+        .isString().withMessage("El rating debe ser un string")
+        // Usamos isFloat para permitir decimales como 4.7
+        .isFloat({ min: 0, max: 5 }).withMessage("El rating debe ser un número entre 0 y 5"),
 
-    //valida que las imagenes sean un array
-    body("images.*")
-    .optional()
-    .isURL().withMessage("Cada imagen debe ser una URL válida"),
+    body("color")
+        .optional()
+        .isString().withMessage("El color debe ser una cadena de texto"),
 
-    //valida que las imagenes sean un array
-    body("images")
-    .optional()
-    .isArray().withMessage("Las imágenes deben ser un array"),
+    body("description")
+        .optional()
+        .isString().withMessage("La descripción debe ser una cadena de texto"),
 
-    //valida que specs sea un objeto
+    // Las validaciones de 'images' se eliminan. Multer ya gestionó los archivos.
+    // La validación de tipo de archivo/tamaño se hace en la configuración de Multer (fileFilter).
+
     body("specs")
-    .optional()
-    .isObject().withMessage("Specs debe ser un objeto"),
-
-]
+        .optional()
+        .isString().withMessage("El campo specs debe ser un string")
+        // Validación personalizada para asegurar que el string es un JSON válido.
+        .custom(value => {
+            try {
+                JSON.parse(value);
+                return true; // El string es un JSON válido
+            } catch (e) {
+                // El string no se pudo parsear, por lo tanto no es un JSON válido.
+                throw new Error("El campo specs debe ser un objeto con formato JSON válido");
+            }
+        }),
+];

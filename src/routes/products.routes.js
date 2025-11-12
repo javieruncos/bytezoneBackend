@@ -9,11 +9,11 @@ const router = express.Router();
 //configuramos las rutas
 router.get('/', getProducts);
 
-router.post("/",verifyAdmin,upload.single("image"), createProductValidation,handleValidatorErrors,createProduct);
+router.post("/",verifyAdmin,upload.array("images", 5), createProductValidation,handleValidatorErrors,createProduct);
 
 router.get("/:id", getProductsById);
 
-router.put("/:id",verifyAdmin,upload.array("images"), createProductValidation, handleValidatorErrors, updateProducts);
+router.put("/:id",upload.array("images"),verifyAdmin, createProductValidation, handleValidatorErrors, updateProducts);
 
 router.delete("/:id",verifyAdmin, deleteProduct);
 

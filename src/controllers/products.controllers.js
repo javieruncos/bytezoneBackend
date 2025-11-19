@@ -8,7 +8,7 @@ export const getProducts = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Error al obtener los productos",
-      error,
+      error: error.message || error.toString(),
     });
   }
 };

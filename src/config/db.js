@@ -1,10 +1,10 @@
 //creamos una instancia de mongoose
-import moongose from 'mongoose';
+import mongoose from "mongoose";
 
 const connectDb = async () => {
     try {
         //creamos la conexion
-        await moongose.connect(process.env.MONGO_URI);
+        await mongoose.connect(process.env.MONGO_URI);
         //imprimimos en consola
         console.log('DB conectada');
     } catch (error) {

@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 export const register = async (req, res) => {
   console.log(req.body);
   try {
-    const { username, email, password, confirmPassword ,perfil} = req.body;
+    const { username, email, password, confirmPassword, perfil } = req.body;
 
     if (password !== confirmPassword) {
       return res.status(400).json({ message: "Las contraseñas no coinciden" });
@@ -22,7 +22,7 @@ export const register = async (req, res) => {
       username,
       email,
       password,
-      perfil
+      perfil,
     });
 
     await newUser.save();
@@ -41,6 +41,10 @@ export const login = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
+
+    console.log("Login attempt:", email);
+    console.log("Password entrada:", password);
+    console.log("Password almacenada:", user.password);
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -75,7 +79,6 @@ export const getProfile = async (req, res) => {
   }
 };
 
-
 export const createUserByAdmin = async (req, res) => {
   try {
     const { username, email, password, perfil } = req.body;
@@ -104,7 +107,6 @@ export const createUserByAdmin = async (req, res) => {
     res.status(500).json({ message: "Error al crear usuario", error });
   }
 };
-
 
 export const getAllUsers = async (req, res) => {
   try {

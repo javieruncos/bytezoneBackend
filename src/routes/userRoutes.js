@@ -13,7 +13,7 @@ const router = Router();
 router.post("/register", register);
 router.post("/login", login);
 router.get('/profile', verifyToken, getProfile);
-router.post("/admin/create-user" ,createUserByAdmin);
+router.post("/admin/create-user",verifyAdmin ,createUserByAdmin);
 router.get("/all",verifyAdmin, getAllUsers);
 
 export default router;

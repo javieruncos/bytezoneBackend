@@ -8,7 +8,7 @@ import contactRouter from './routes/contact.routes.js';
 
 
 //creamos una instancia de express
-export const app = express();
+ const app = express();
 
 //middlewares
 //cors para permitir peticiones de otros dominios
@@ -24,3 +24,5 @@ app.use('/uploads', express.static('uploads'));
 app.use("/api/products", productRouter);
 app.use("/api/users", userRouter);
 app.use("/api/contact", contactRouter);
+
+export default app;

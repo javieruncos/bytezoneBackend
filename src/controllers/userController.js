@@ -88,7 +88,7 @@ export const createUserByAdmin = async (req, res) => {
       return res.status(400).json({ message: "Usuario ya registrado" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+   
 
     // Para evitar que perfil venga vacío o inválido, podemos hacer:
     const userPerfil = perfil === "admin" ? "admin" : "usuario";
@@ -96,7 +96,7 @@ export const createUserByAdmin = async (req, res) => {
     const newUser = new User({
       username,
       email,
-      password: hashedPassword,
+      password,
       perfil: userPerfil,
     });
 

@@ -1,4 +1,5 @@
 import Product from "../models/products.models.js";
+import { v2 as cloudinary } from "cloudinary";
 
 //funcion para obtener todos los productos
 export const getProducts = async (req, res) => {
@@ -112,46 +113,39 @@ export const updateProducts = async (req, res) => {
     }
 
     // 4. Manejar las imágenes
-    const serverUrl = `${req.protocol}://${req.get("host")}`;
-    const newImages = req.files?.map(
-      (file) => `${serverUrl}/uploads/${file.filename}`
-    );
+    const deleted = Array.isArray(req.body.deletedImages)
+      ? req.body.deletedImages
+      : [req.body.deletedImages].filter(Boolean);
 
-    // Solo reemplazar si hay nuevas imágenes subidas
-    if (newImages && newImages.length > 0) {
-      // Borrar las antiguas si lo deseas
-      if (product.images?.length) {
-        for (const imageUrl of product.images) {
-          try {
-            const filename = path.basename(imageUrl);
-            await fs.unlink(path.join("uploads", filename));
-          } catch (err) {
-            console.error(
-              `No se pudo borrar la imagen antigua: ${imageUrl}`,
-              err
-            );
-          }
-        }
+    for (const public_id of deleted) {
+      try {
+        await cloudinary.uploader.destroy(public_id);
+      } catch (err) {
+        console.error(`No se pudo borrar ${public_id}`, err);
       }
-      dataToUpdate.images = newImages;
-    } else {
-      // Si no se subieron nuevas, mantener las actuales
-      dataToUpdate.images = product.images;
     }
 
-    // 5. Actualizar el producto en la base de datos
+    const remainingImages = product.images.filter(
+      (img) => !deleted.includes(img.public_id)
+    );
+
+    const newImages =
+      req.files?.map((file) => ({
+        url: file.path,
+        public_id: file.filename,
+      })) || [];
+
+    dataToUpdate.images = [...remainingImages, ...newImages];
+
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
-      { $set: dataToUpdate }, // Usar $set para actualizar solo los campos proporcionados
+      { $set: dataToUpdate },
       { new: true, runValidators: true }
     );
 
-    if (!updatedProduct) {
-      // Esta comprobación es redundante si findById ya lo hizo, pero es una buena práctica
-      return res.status(404).json({ message: "Producto no encontrado" });
-    }
-
+    
     res.json(updatedProduct);
+    
   } catch (error) {
     console.error("Error al actualizar producto:", error);
     res.status(500).json({

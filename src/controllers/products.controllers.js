@@ -15,6 +15,9 @@ export const getProducts = async (req, res) => {
 
 export const createProduct = async (req, res) => {
   try {
+    console.log("BODY RECIBIDO:", req.body);
+    console.log("ARCHIVOS RECIBIDOS:", req.files);
+
     // 1. Extraer y procesar los campos del body
     const { name, price, type, discount, rating, color, description, specs } =
       req.body;
@@ -22,26 +25,24 @@ export const createProduct = async (req, res) => {
     // 2. Procesar las imágenes desde req.files (plural)
     // req.files es un array de archivos. Si no se sube ninguno, será undefined.
     const images =
-      req.files?.map((file) => {
-        // Construimos la URL completa para que el frontend pueda acceder a ella.
-        // Esto asume que tienes una ruta estática para la carpeta 'uploads'.
-        // Ejemplo en tu app.js: app.use('/uploads', express.static('uploads'));
-        return `${req.protocol}://${req.get("host")}/${file.path.replace(
-          /\\/g,
-          "/"
-        )}`;
-      }) || []; // Si no hay archivos, se asigna un array vacío.
+      req.files?.map((file) => ({
+        url: file.path,
+        public_id: file.filename,
+      })) || [];
 
     // 3. Parsear el string de 'specs' para convertirlo en un objeto
     let parsedSpecs = {};
     if (specs) {
-      try {
-        parsedSpecs = JSON.parse(specs);
-      } catch (parseError) {
-        // Si el JSON es inválido, devolvemos un error 400.
-        return res.status(400).json({
-          message: "El formato del campo 'specs' no es un JSON válido.",
-        });
+      if (typeof specs === "string") {
+        try {
+          parsedSpecs = JSON.parse(specs);
+        } catch (parseError) {
+          return res.status(400).json({
+            message: "El formato del campo 'specs' no es un JSON válido.",
+          });
+        }
+      } else if (typeof specs === "object") {
+        parsedSpecs = specs;
       }
     }
 
@@ -65,10 +66,12 @@ export const createProduct = async (req, res) => {
     res.status(201).json(savedProduct);
   } catch (error) {
     // Capturar cualquier otro error y enviarlo en la respuesta
-    console.error("Error al crear el producto:", error);
+    console.error("🔥 Error al crear el producto:", error);
+
     res.status(500).json({
       message: "Error interno del servidor al crear el producto.",
       error: error.message,
+      stack: error.stack,
     });
   }
 };

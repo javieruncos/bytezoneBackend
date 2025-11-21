@@ -59,21 +59,22 @@ const productSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    description:{
+    description: {
       type: String,
       trim: true,
-    } , 
-    images: {
-      type: [String], // array de URLs
-      default: [],
     },
+    images: [
+      {
+        url: { type: String, required: true },
+        public_id: { type: String, required: true },
+      },
+    ],
     specs: specsSchema, // objeto con detalles específicos
   },
   {
     timestamps: true,
   }
 );
-
 
 const Product = mongoose.model("Product", productSchema);
 export default Product;

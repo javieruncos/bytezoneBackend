@@ -1,19 +1,14 @@
 import multer from "multer";
-import path from "path";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import cloudinary from "../config/cloudinary.js";
 
-
-const storage = multer.diskStorage({
-    //destino de las imagenes
-    destination : (req,file,cb)=>{
-        cb(null,"uploads");
-    },
-    //nombre de las imagenes con la extension
-    filename : (req,file,cb)=>{
-        //obtenemos la extension
-        const ext = path.extname(file.originalname);
-        //concatenamos la fecha y la extension para que no se repitan los nombres
-        cb(null,`${Date.now()}${ext}`);
-    }
+const storage = new CloudinaryStorage({
+  cloudinary,
+ params: async (req, file) => ({
+    folder: "uploads",
+    public_id: `${Date.now()}-${file.originalname}`,
+    allowed_formats: ["jpg", "png", "jpeg", "webp"],
+  }),
 })
 
-export const upload = multer({storage});
+export const upload = multer({storage})

@@ -1,4 +1,5 @@
 import Product from "../models/products.models.js";
+import { v2 as cloudinary } from "cloudinary";
 
 //funcion para obtener todos los productos
 export const getProducts = async (req, res) => {
@@ -15,6 +16,9 @@ export const getProducts = async (req, res) => {
 
 export const createProduct = async (req, res) => {
   try {
+    console.log("BODY RECIBIDO:", req.body);
+    console.log("ARCHIVOS RECIBIDOS:", req.files);
+
     // 1. Extraer y procesar los campos del body
     const { name, price, type, discount, rating, color, description, specs } =
       req.body;
@@ -22,26 +26,24 @@ export const createProduct = async (req, res) => {
     // 2. Procesar las imágenes desde req.files (plural)
     // req.files es un array de archivos. Si no se sube ninguno, será undefined.
     const images =
-      req.files?.map((file) => {
-        // Construimos la URL completa para que el frontend pueda acceder a ella.
-        // Esto asume que tienes una ruta estática para la carpeta 'uploads'.
-        // Ejemplo en tu app.js: app.use('/uploads', express.static('uploads'));
-        return `${req.protocol}://${req.get("host")}/${file.path.replace(
-          /\\/g,
-          "/"
-        )}`;
-      }) || []; // Si no hay archivos, se asigna un array vacío.
+      req.files?.map((file) => ({
+        url: file.path,
+        public_id: file.filename,
+      })) || [];
 
     // 3. Parsear el string de 'specs' para convertirlo en un objeto
     let parsedSpecs = {};
     if (specs) {
-      try {
-        parsedSpecs = JSON.parse(specs);
-      } catch (parseError) {
-        // Si el JSON es inválido, devolvemos un error 400.
-        return res.status(400).json({
-          message: "El formato del campo 'specs' no es un JSON válido.",
-        });
+      if (typeof specs === "string") {
+        try {
+          parsedSpecs = JSON.parse(specs);
+        } catch (parseError) {
+          return res.status(400).json({
+            message: "El formato del campo 'specs' no es un JSON válido.",
+          });
+        }
+      } else if (typeof specs === "object") {
+        parsedSpecs = specs;
       }
     }
 
@@ -65,10 +67,12 @@ export const createProduct = async (req, res) => {
     res.status(201).json(savedProduct);
   } catch (error) {
     // Capturar cualquier otro error y enviarlo en la respuesta
-    console.error("Error al crear el producto:", error);
+    console.error("🔥 Error al crear el producto:", error);
+
     res.status(500).json({
       message: "Error interno del servidor al crear el producto.",
       error: error.message,
+      stack: error.stack,
     });
   }
 };
@@ -109,46 +113,39 @@ export const updateProducts = async (req, res) => {
     }
 
     // 4. Manejar las imágenes
-    const serverUrl = `${req.protocol}://${req.get("host")}`;
-    const newImages = req.files?.map(
-      (file) => `${serverUrl}/uploads/${file.filename}`
-    );
+    const deleted = Array.isArray(req.body.deletedImages)
+      ? req.body.deletedImages
+      : [req.body.deletedImages].filter(Boolean);
 
-    // Solo reemplazar si hay nuevas imágenes subidas
-    if (newImages && newImages.length > 0) {
-      // Borrar las antiguas si lo deseas
-      if (product.images?.length) {
-        for (const imageUrl of product.images) {
-          try {
-            const filename = path.basename(imageUrl);
-            await fs.unlink(path.join("uploads", filename));
-          } catch (err) {
-            console.error(
-              `No se pudo borrar la imagen antigua: ${imageUrl}`,
-              err
-            );
-          }
-        }
+    for (const public_id of deleted) {
+      try {
+        await cloudinary.uploader.destroy(public_id);
+      } catch (err) {
+        console.error(`No se pudo borrar ${public_id}`, err);
       }
-      dataToUpdate.images = newImages;
-    } else {
-      // Si no se subieron nuevas, mantener las actuales
-      dataToUpdate.images = product.images;
     }
 
-    // 5. Actualizar el producto en la base de datos
+    const remainingImages = product.images.filter(
+      (img) => !deleted.includes(img.public_id)
+    );
+
+    const newImages =
+      req.files?.map((file) => ({
+        url: file.path,
+        public_id: file.filename,
+      })) || [];
+
+    dataToUpdate.images = [...remainingImages, ...newImages];
+
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
-      { $set: dataToUpdate }, // Usar $set para actualizar solo los campos proporcionados
+      { $set: dataToUpdate },
       { new: true, runValidators: true }
     );
 
-    if (!updatedProduct) {
-      // Esta comprobación es redundante si findById ya lo hizo, pero es una buena práctica
-      return res.status(404).json({ message: "Producto no encontrado" });
-    }
-
+    
     res.json(updatedProduct);
+    
   } catch (error) {
     console.error("Error al actualizar producto:", error);
     res.status(500).json({

@@ -15,12 +15,10 @@ export const register = async (req, res) => {
       return res.status(400).json({ message: "El usuario ya está registrado" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     const newUser = new User({
       username,
       email,
-      password: hashedPassword,
+      password, // Pasamos la contraseña en texto plano, el modelo se encarga de hashearla
       perfil: perfil || "usuario",
     });
 
@@ -35,7 +33,12 @@ export const register = async (req, res) => {
 
     res.status(201).json({
       message: "Usuario creado y autenticado",
-      user: { id: newUser._id, username: newUser.username, email: newUser.email, perfil: newUser.perfil },
+      user: {
+        id: newUser._id,
+        username: newUser.username,
+        email: newUser.email,
+        perfil: newUser.perfil,
+      },
       token,
     });
   } catch (error) {
@@ -43,34 +46,39 @@ export const register = async (req, res) => {
   }
 };
 
-
-
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    //verificamos si el usuario existe
+
+    // verificamos si el usuario existe
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
-    console.log("Login attempt:", email);
-    console.log("Password entrada:", password);
-    console.log("Password almacenada:", user.password);
-
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: "Contraseña incorrecta" });
+      return res.status(400).json({ message: "Contraseña incorrecta" });
     }
 
-    //creamos el token
+    // creamos el token
     const token = jwt.sign(
       { id: user._id, username: user.username, perfil: user.perfil },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
-    res.status(200).json({ message: "Usuario logueado", token });
+    // ✅ devolver también el objeto user
+    res.status(200).json({
+      message: "Usuario logueado",
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        perfil: user.perfil,
+      },
+      token,
+    });
   } catch (error) {
     res.status(500).json({ message: "Error al loguear el usuario", error });
   }
@@ -100,15 +108,13 @@ export const createUserByAdmin = async (req, res) => {
       return res.status(400).json({ message: "Usuario ya registrado" });
     }
 
-   
-
     // Para evitar que perfil venga vacío o inválido, podemos hacer:
     const userPerfil = perfil === "admin" ? "admin" : "usuario";
 
     const newUser = new User({
       username,
       email,
-      password,
+      password, // Pasamos la contraseña en texto plano, el modelo se encarga de hashearla
       perfil: userPerfil,
     });
 

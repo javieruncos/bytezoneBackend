@@ -16,8 +16,8 @@ export const getProducts = async (req, res) => {
 
 export const createProduct = async (req, res) => {
   try {
-    console.log("BODY RECIBIDO:", req.body);
-    console.log("ARCHIVOS RECIBIDOS:", req.files);
+    console.log("BODY RECIBIDO:", JSON.stringify(req.body, null, 2));
+    console.log("ARCHIVOS RECIBIDOS:", JSON.stringify(req.files, null, 2));
 
     // 1. Extraer y procesar los campos del body
     const { name, price, type, discount, rating, color, description, specs } =
@@ -60,20 +60,23 @@ export const createProduct = async (req, res) => {
       specs: parsedSpecs,
     });
 
+      if (!req.files || req.files.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Debes subir al menos una imagen" });
+    }
+
     // 5. Guardar el producto en la base de datos
     const savedProduct = await newProduct.save();
 
     // 6. Enviar la respuesta con el producto creado
     res.status(201).json(savedProduct);
   } catch (error) {
-    // Capturar cualquier otro error y enviarlo en la respuesta
-    console.error("🔥 Error al crear el producto:", error);
-
-    res.status(500).json({
-      message: "Error interno del servidor al crear el producto.",
-      error: error.message,
-      stack: error.stack,
-    });
+    console.error("🔥 Error al crear el producto:", error.message);
+    if (error.errors) {
+      console.error("Detalles de validación:", error.errors);
+    }
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
@@ -143,9 +146,7 @@ export const updateProducts = async (req, res) => {
       { new: true, runValidators: true }
     );
 
-    
     res.json(updatedProduct);
-    
   } catch (error) {
     console.error("Error al actualizar producto:", error);
     res.status(500).json({

@@ -69,6 +69,7 @@ const productSchema = new mongoose.Schema(
         public_id: { type: String, required: true },
       },
     ],
+
     specs: specsSchema, // objeto con detalles específicos
   },
   {

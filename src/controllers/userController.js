@@ -3,35 +3,47 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
 export const register = async (req, res) => {
-  console.log(req.body);
   try {
     const { username, email, password, confirmPassword, perfil } = req.body;
 
     if (password !== confirmPassword) {
-      return res.status(400).json({ message: "Las contraseñas no coinciden" });
+      return res.status(400).json({ message: "Las contraseñas no coinciden" });
     }
 
     const userFound = await User.findOne({ email });
-    //verificamos si el usuario ya esta registrado
     if (userFound) {
-      return res.status(400).json({ message: "El usuario ya esta registrado" });
+      return res.status(400).json({ message: "El usuario ya está registrado" });
     }
 
-    //creamos el usuario
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const newUser = new User({
       username,
       email,
-      password,
-      perfil,
+      password: hashedPassword,
+      perfil: perfil || "usuario",
     });
 
     await newUser.save();
 
-    res.status(201).json({ message: "Usuario creado" });
+    // 🔑 Generar token inmediatamente
+    const token = jwt.sign(
+      { id: newUser._id, username: newUser.username, perfil: newUser.perfil },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    res.status(201).json({
+      message: "Usuario creado y autenticado",
+      user: { id: newUser._id, username: newUser.username, email: newUser.email, perfil: newUser.perfil },
+      token,
+    });
   } catch (error) {
     res.status(500).json({ message: "Error al crear el usuario", error });
   }
 };
+
+
 
 export const login = async (req, res) => {
   try {

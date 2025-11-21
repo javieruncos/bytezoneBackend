@@ -38,7 +38,6 @@ export const verifyAdmin = (req, res, next) => {
     if (decoded.perfil?.toLowerCase() !== "admin") {
       return res.status(403).json({ message: "Acceso denegado" });
     }
-    console.log("✅ Usuario verificado como admin:", decoded);
 
     // Adjuntamos el usuario decodificado para que lo use el siguiente middleware o controlador
     req.user = decoded;

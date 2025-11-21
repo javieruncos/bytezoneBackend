@@ -16,9 +16,6 @@ export const getProducts = async (req, res) => {
 
 export const createProduct = async (req, res) => {
   try {
-    console.log("BODY RECIBIDO:", JSON.stringify(req.body, null, 2));
-    console.log("ARCHIVOS RECIBIDOS:", JSON.stringify(req.files, null, 2));
-
     // 1. Extraer y procesar los campos del body
     const { name, price, type, discount, rating, color, description, specs } =
       req.body;
@@ -72,10 +69,6 @@ export const createProduct = async (req, res) => {
     // 6. Enviar la respuesta con el producto creado
     res.status(201).json(savedProduct);
   } catch (error) {
-    console.error("🔥 Error al crear el producto:", error.message);
-    if (error.errors) {
-      console.error("Detalles de validación:", error.errors);
-    }
     res.status(500).json({ success: false, error: error.message });
   }
 };
@@ -124,7 +117,6 @@ export const updateProducts = async (req, res) => {
       try {
         await cloudinary.uploader.destroy(public_id);
       } catch (err) {
-        console.error(`No se pudo borrar ${public_id}`, err);
       }
     }
 
@@ -148,7 +140,6 @@ export const updateProducts = async (req, res) => {
 
     res.json(updatedProduct);
   } catch (error) {
-    console.error("Error al actualizar producto:", error);
     res.status(500).json({
       message: "Error al actualizar producto",
       error: error.message,
